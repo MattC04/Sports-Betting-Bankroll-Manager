@@ -47,11 +47,19 @@ def get_db_connection():
 
 
 def format_game_time(commence_time):
-    """Format game commence time for display."""
+    """Format game commence time for display in local timezone."""
     try:
+        # Parse the ISO format time (UTC)
         dt = datetime.fromisoformat(commence_time.replace('Z', '+00:00'))
-        return dt.strftime('%I:%M %p')
-    except:
+        
+        # Convert to local timezone
+        from datetime import timezone
+        local_dt = dt.astimezone()
+        
+        # Format for display
+        return local_dt.strftime('%I:%M %p')
+    except Exception as e:
+        logger.error(f"Error formatting time {commence_time}: {e}")
         return commence_time
 
 
@@ -94,7 +102,7 @@ def get_sports():
 def get_games():
     """Get games for today or upcoming, organized by sport."""
     sport = request.args.get('sport', 'basketball_nba')
-    date_filter = request.args.get('date', 'today')  # today, tomorrow, week
+    date_filter = request.args.get('date', 'week')  # today, tomorrow, week
     
     try:
         conn = get_db_connection()
@@ -104,66 +112,9 @@ def get_games():
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [row[0] for row in cursor.fetchall()]
         
-        logger.info(f"Available tables: {tables}")
+        logger.info(f"Loading games - sport: {sport}, filter: {date_filter}")
         
-        # Build date filter
-        if date_filter == 'today':
-            date_condition = "date(commence_time) = date('now')"
-        elif date_filter == 'tomorrow':
-            date_condition = "date(commence_time) = date('now', '+1 day')"
-        elif date_filter == 'week':
-            date_condition = "date(commence_time) BETWEEN date('now') AND date('now', '+7 days')"
-        else:
-            date_condition = "date(commence_time) >= date('now')"
-        
-        # Use appropriate query based on available tables
-        if 'player_props' in tables:
-            # Check if we have the right columns
-            cursor.execute("PRAGMA table_info(player_props)")
-            columns = [row[1] for row in cursor.fetchall()]
-            
-            if 'sport_title' in columns:
-                # New schema (enhanced_scraper_v2)
-                query = f"""
-                    SELECT DISTINCT 
-                        event_id,
-                        sport_key,
-                        sport_title,
-                        home_team,
-                        away_team,
-                        commence_time,
-                        MIN(scraped_at) as first_scraped,
-                        COUNT(DISTINCT player_name) as player_count,
-                        COUNT(DISTINCT bookmaker_key) as bookmaker_count
-                    FROM player_props
-                    WHERE {date_condition}
-                    AND sport_key = ?
-                    GROUP BY event_id, sport_key, sport_title, home_team, away_team, commence_time
-                    ORDER BY commence_time ASC
-                """
-                cursor.execute(query, (sport,))
-            else:
-                # Old schema - try to adapt
-                query = f"""
-                    SELECT DISTINCT 
-                        event_id,
-                        sport_key,
-                        sport_key as sport_title,
-                        home_team,
-                        away_team,
-                        commence_time,
-                        MIN(scraped_at) as first_scraped,
-                        COUNT(DISTINCT player_name) as player_count,
-                        COUNT(DISTINCT bookmaker_key) as bookmaker_count
-                    FROM player_props
-                    WHERE {date_condition}
-                    AND sport_key = ?
-                    GROUP BY event_id, sport_key, home_team, away_team, commence_time
-                    ORDER BY commence_time ASC
-                """
-                cursor.execute(query, (sport,))
-        else:
-            # No player_props table, return empty
+        if 'player_props' not in tables:
             logger.warning("No player_props table found!")
             conn.close()
             return jsonify({
@@ -175,7 +126,139 @@ def get_games():
                 'success': False
             })
         
+        # Get current time - use timezone-aware datetime
+        try:
+            # Try to get local timezone
+            now_local = datetime.now().astimezone()
+            now_utc = datetime.now(timezone.utc)
+        except Exception as e:
+            logger.error(f"Error getting timezone-aware datetime: {e}")
+            # Fallback to naive datetime
+            now_local = datetime.now()
+            now_utc = datetime.utcnow()
+        
+        logger.info(f"Local time: {now_local}, UTC time: {now_utc}")
+        
+        # Build date filter
+        try:
+            if date_filter == 'today':
+                # Today in local time: from start of today to end of today
+                start_of_today_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_of_today_local = now_local.replace(hour=23, minute=59, second=59, microsecond=999999)
+                
+                # Convert to UTC for comparison
+                try:
+                    start_of_today_utc = start_of_today_local.astimezone(timezone.utc)
+                    end_of_today_utc = end_of_today_local.astimezone(timezone.utc)
+                except:
+                    # If astimezone fails, calculate offset manually
+                    offset = datetime.now() - datetime.utcnow()
+                    start_of_today_utc = start_of_today_local - offset
+                    end_of_today_utc = end_of_today_local - offset
+                
+                date_condition = f"commence_time >= '{start_of_today_utc.isoformat().replace('+00:00', 'Z')}' AND commence_time <= '{end_of_today_utc.isoformat().replace('+00:00', 'Z')}'"
+                logger.info(f"TODAY filter: {start_of_today_local} to {end_of_today_local} (local)")
+                logger.info(f"TODAY filter (UTC): {start_of_today_utc.isoformat()} to {end_of_today_utc.isoformat()}")
+                
+            elif date_filter == 'tomorrow':
+                # Tomorrow in local time
+                start_of_tomorrow_local = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                end_of_tomorrow_local = start_of_tomorrow_local.replace(hour=23, minute=59, second=59, microsecond=999999)
+                
+                # Convert to UTC
+                try:
+                    start_of_tomorrow_utc = start_of_tomorrow_local.astimezone(timezone.utc)
+                    end_of_tomorrow_utc = end_of_tomorrow_local.astimezone(timezone.utc)
+                except:
+                    offset = datetime.now() - datetime.utcnow()
+                    start_of_tomorrow_utc = start_of_tomorrow_local - offset
+                    end_of_tomorrow_utc = end_of_tomorrow_local - offset
+                
+                date_condition = f"commence_time >= '{start_of_tomorrow_utc.isoformat().replace('+00:00', 'Z')}' AND commence_time <= '{end_of_tomorrow_utc.isoformat().replace('+00:00', 'Z')}'"
+                logger.info(f"TOMORROW filter: {start_of_tomorrow_local} to {end_of_tomorrow_local} (local)")
+                
+            elif date_filter == 'week':
+                # Next 7 days from now
+                week_from_now_local = now_local + timedelta(days=7)
+                
+                try:
+                    week_from_now_utc = week_from_now_local.astimezone(timezone.utc)
+                    now_utc_aware = now_local.astimezone(timezone.utc)
+                except:
+                    offset = datetime.now() - datetime.utcnow()
+                    week_from_now_utc = week_from_now_local - offset
+                    now_utc_aware = now_local - offset
+                
+                date_condition = f"commence_time >= '{now_utc_aware.isoformat().replace('+00:00', 'Z')}' AND commence_time <= '{week_from_now_utc.isoformat().replace('+00:00', 'Z')}'"
+                logger.info(f"WEEK filter: now to {week_from_now_local} (local)")
+            else:
+                # All upcoming games
+                try:
+                    now_utc_aware = now_local.astimezone(timezone.utc)
+                except:
+                    offset = datetime.now() - datetime.utcnow()
+                    now_utc_aware = now_local - offset
+                date_condition = f"commence_time >= '{now_utc_aware.isoformat().replace('+00:00', 'Z')}'"
+            
+            # Also filter out games that have already started
+            date_condition += f" AND commence_time > '{now_utc.isoformat().replace('+00:00', 'Z')}'"
+            
+        except Exception as e:
+            logger.error(f"Error building date condition: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback to simple condition
+            date_condition = "1=1"  # Show all games
+        
+        logger.info(f"Final date condition: {date_condition}")
+        
+        # Check if we have the right columns
+        cursor.execute("PRAGMA table_info(player_props)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'sport_title' in columns:
+            # New schema
+            query = f"""
+                SELECT DISTINCT 
+                    event_id,
+                    sport_key,
+                    sport_title,
+                    home_team,
+                    away_team,
+                    commence_time,
+                    MIN(scraped_at) as first_scraped,
+                    COUNT(DISTINCT player_name) as player_count,
+                    COUNT(DISTINCT bookmaker_key) as bookmaker_count
+                FROM player_props
+                WHERE {date_condition}
+                AND sport_key = ?
+                GROUP BY event_id, sport_key, sport_title, home_team, away_team, commence_time
+                ORDER BY commence_time ASC
+            """
+        else:
+            # Old schema
+            query = f"""
+                SELECT DISTINCT 
+                    event_id,
+                    sport_key,
+                    sport_key as sport_title,
+                    home_team,
+                    away_team,
+                    commence_time,
+                    MIN(scraped_at) as first_scraped,
+                    COUNT(DISTINCT player_name) as player_count,
+                    COUNT(DISTINCT bookmaker_key) as bookmaker_count
+                FROM player_props
+                WHERE {date_condition}
+                AND sport_key = ?
+                GROUP BY event_id, sport_key, home_team, away_team, commence_time
+                ORDER BY commence_time ASC
+            """
+        
+        logger.info(f"Executing query with sport={sport}")
+        cursor.execute(query, (sport,))
         rows = cursor.fetchall()
+        logger.info(f"Query returned {len(rows)} rows")
         conn.close()
         
         games = []
@@ -192,6 +275,8 @@ def get_games():
                 'player_count': row['player_count'],
                 'bookmaker_count': row['bookmaker_count']
             })
+        
+        logger.info(f"Returning {len(games)} games for {date_filter}")
         
         return jsonify({
             'games': games, 
