@@ -177,9 +177,14 @@
             <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
                 <!-- Modal Header -->
                 <div class="gradient-bg text-white p-6 flex justify-between items-center">
-                    <div>
-                        <h2 id="playerModalTitle" class="text-2xl font-bold mb-1">Player Details</h2>
-                        <p id="playerModalSubtitle" class="text-sm opacity-90"></p>
+                    <div class="flex items-center space-x-4">
+                        <button id="backToGameModal" class="text-white hover:bg-white/20 rounded-full p-2 transition" title="Back to all players">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 id="playerModalTitle" class="text-2xl font-bold mb-1">Player Details</h2>
+                            <p id="playerModalSubtitle" class="text-sm opacity-90"></p>
+                        </div>
                     </div>
                     <button id="closePlayerModal" class="text-white hover:bg-white/20 rounded-full p-2 transition">
                         <i class="fas fa-times text-xl"></i>
@@ -285,6 +290,17 @@
             if (closePlayerModal) {
                 closePlayerModal.addEventListener('click', () => {
                     document.getElementById('playerModal').classList.add('hidden');
+                });
+            }
+
+            const backToGameModal = document.getElementById('backToGameModal');
+            if (backToGameModal) {
+                backToGameModal.addEventListener('click', () => {
+                    console.log('Back to game modal');
+                    // Hide player modal
+                    document.getElementById('playerModal').classList.add('hidden');
+                    // Show game modal
+                    document.getElementById('gameModal').classList.remove('hidden');
                 });
             }
 
