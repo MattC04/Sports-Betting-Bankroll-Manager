@@ -12,20 +12,23 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 /* =========================
-   GLOBAL
+   GLOBAL TYPOGRAPHY
 ========================= */
 * {
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'Satoshi', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .numeric {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'JetBrains Mono', monospace;
 }
 
+/* =========================
+   BACKGROUND
+========================= */
 body {
   background: radial-gradient(
     1200px circle at 10% 10%,
@@ -108,9 +111,9 @@ button:active {
 ========================= */
 .label {
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.7rem;
-  opacity: 0.6;
+  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+  opacity: 0.55;
 }
 
 /* =========================
@@ -137,89 +140,65 @@ button:active {
 
 <body>
 
-<!-- =========================
-     HEADER
-========================= -->
 <header class="gradient-header sticky top-0 z-40 shadow-2xl">
   <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-
     <div class="flex items-center gap-4">
       <div class="p-3 rounded-xl bg-white/20">
         <i class="fas fa-chart-line text-2xl"></i>
       </div>
       <div>
-        <h1 class="text-2xl font-extrabold tracking-tight">
-          Sports Analytics
-        </h1>
-        <p class="text-sm opacity-80">
-          Player Props Intelligence
-        </p>
+        <h1 class="text-2xl font-extrabold tracking-tight">Sports Analytics</h1>
+        <p class="text-sm opacity-80">Player Props Intelligence</p>
       </div>
     </div>
 
     <div class="flex items-center gap-4">
-      <input
-        class="search-glow bg-white/10 px-4 py-2 rounded-xl w-64 text-sm"
-        placeholder="Search players, teams"
-      />
+      <input class="search-glow bg-white/10 px-4 py-2 rounded-xl w-64 text-sm" placeholder="Search players, teams">
       <button class="btn-gradient px-5 py-2 rounded-xl font-semibold">
-        <i class="fas fa-sync-alt mr-2"></i>
-        Refresh
+        <i class="fas fa-sync-alt mr-2"></i>Refresh
       </button>
     </div>
-
   </div>
 </header>
 
-<!-- =========================
-     MAIN
-========================= -->
 <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-  <!-- FILTER BAR -->
-  <section class="glass rounded-2xl p-6 flex justify-between items-center">
+<section class="glass rounded-2xl p-6 flex justify-between items-center">
+  <div class="flex gap-2">
+    <button class="sport-pill active px-4 py-2 rounded-full text-sm font-semibold">NBA</button>
+    <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">NFL</button>
+    <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">MLB</button>
+    <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">NHL</button>
+  </div>
 
-    <div class="flex gap-2">
-      <button class="sport-pill active px-4 py-2 rounded-full text-sm font-semibold">NBA</button>
-      <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">NFL</button>
-      <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">MLB</button>
-      <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">NHL</button>
-    </div>
+  <div class="flex gap-2">
+    <button class="glass px-4 py-2 rounded-full text-sm">Today</button>
+    <button class="glass px-4 py-2 rounded-full text-sm">Tomorrow</button>
+    <button class="btn-gradient px-4 py-2 rounded-full text-sm">Week</button>
+  </div>
+</section>
 
-    <div class="flex gap-2">
-      <button class="glass px-4 py-2 rounded-full text-sm">Today</button>
-      <button class="glass px-4 py-2 rounded-full text-sm">Tomorrow</button>
-      <button class="btn-gradient px-4 py-2 rounded-full text-sm">Week</button>
-    </div>
+<section class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+  <div class="glass card-modern rounded-2xl p-6">
+    <span class="label">Matchup</span>
+    <h2 class="text-xl font-bold mt-1">Lakers @ Warriors</h2>
 
-  </section>
-
-  <!-- GAME CARDS -->
-  <section class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-    <div class="glass card-modern rounded-2xl p-6">
-      <span class="label">Matchup</span>
-      <h2 class="text-xl font-bold mt-1">
-        Lakers @ Warriors
-      </h2>
-
-      <div class="mt-4 flex justify-between text-sm">
-        <div>
-          <span class="label">Players</span>
-          <p class="numeric font-semibold">28</p>
-        </div>
-        <div>
-          <span class="label">Books</span>
-          <p class="numeric font-semibold">9</p>
-        </div>
-        <div>
-          <span class="label">Time</span>
-          <p class="numeric font-semibold">7:30 PM</p>
-        </div>
+    <div class="mt-4 flex justify-between text-sm">
+      <div>
+        <span class="label">Players</span>
+        <p class="numeric font-semibold">28</p>
+      </div>
+      <div>
+        <span class="label">Books</span>
+        <p class="numeric font-semibold">9</p>
+      </div>
+      <div>
+        <span class="label">Time</span>
+        <p class="numeric font-semibold">7:30 PM</p>
       </div>
     </div>
-
-  </section>
+  </div>
+</section>
 
 </main>
 
