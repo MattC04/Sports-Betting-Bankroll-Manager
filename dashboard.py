@@ -2,7 +2,7 @@ from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 import sqlite3
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 import logging
 
@@ -123,10 +123,9 @@ def get_games():
                 'success': False
             })
         
-        # SIMPLIFIED: Just show all upcoming games regardless of filter for now
-        # We'll fix the timezone logic once we confirm this works
-        print(f"Using simplified filter - showing all upcoming games")
-        date_condition = "1=1"  # Show all games
+        # Filter out past games - only show today and future games
+        # Use datetime comparison to filter out past games
+        now_utc = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
         
         # Check if we have the right columns
         cursor.execute("PRAGMA table_info(player_props)")
@@ -134,7 +133,7 @@ def get_games():
         
         if 'sport_title' in columns:
             # New schema
-            query = f"""
+            query = """
                 SELECT DISTINCT 
                     event_id,
                     sport_key,
@@ -146,13 +145,13 @@ def get_games():
                     COUNT(DISTINCT player_name) as player_count,
                     COUNT(DISTINCT bookmaker_key) as bookmaker_count
                 FROM player_props
-                WHERE sport_key = ?
+                WHERE sport_key = ? AND commence_time >= ?
                 GROUP BY event_id, sport_key, sport_title, home_team, away_team, commence_time
                 ORDER BY commence_time ASC
             """
         else:
             # Old schema
-            query = f"""
+            query = """
                 SELECT DISTINCT 
                     event_id,
                     sport_key,
@@ -164,17 +163,16 @@ def get_games():
                     COUNT(DISTINCT player_name) as player_count,
                     COUNT(DISTINCT bookmaker_key) as bookmaker_count
                 FROM player_props
-                WHERE sport_key = ?
+                WHERE sport_key = ? AND commence_time >= ?
                 GROUP BY event_id, sport_key, home_team, away_team, commence_time
                 ORDER BY commence_time ASC
             """
         
-        print(f"Executing query...")
-        cursor.execute(query, (sport,))
+        print(f"Executing query with filter: commence_time >= {now_utc}")
+        cursor.execute(query, (sport, now_utc))
         rows = cursor.fetchall()
         print(f"Query returned {len(rows)} rows")
         logger.info(f"Query returned {len(rows)} rows")
-        conn.close()
         
         games = []
         for row in rows:
@@ -191,12 +189,26 @@ def get_games():
                 'bookmaker_count': row['bookmaker_count']
             })
         
-        print(f"Returning {len(games)} games")
+        # Additional filter in Python to be safe (in case timezone issues)
+        now_utc = datetime.now(timezone.utc)
+        filtered_games = []
+        for game in games:
+            try:
+                game_time = datetime.fromisoformat(game['commence_time'].replace('Z', '+00:00'))
+                if game_time >= now_utc:
+                    filtered_games.append(game)
+            except Exception as e:
+                logger.warning(f"Error parsing game time {game['commence_time']}: {e}")
+                # Include it anyway if we can't parse it
+                filtered_games.append(game)
+        
+        print(f"Returning {len(filtered_games)} games (filtered from {len(games)})")
         print("=== END API REQUEST ===\n")
+        conn.close()
         
         return jsonify({
-            'games': games, 
-            'count': len(games),
+            'games': filtered_games, 
+            'count': len(filtered_games),
             'sport': sport,
             'date_filter': date_filter,
             'success': True
@@ -395,6 +407,57 @@ def get_player_history(player_name):
         })
     except Exception as e:
         logger.error(f"Error fetching player history: {e}")
+        return jsonify({'error': str(e), 'success': False}), 500
+
+
+@app.route('/api/player/<player_name>/history/<prop_type>')
+def get_player_history_by_prop(player_name, prop_type):
+    """Get historical prop data for a player filtered by prop type."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                event_id,
+                home_team,
+                away_team,
+                commence_time,
+                prop_type,
+                outcome_point as line_value,
+                COUNT(DISTINCT bookmaker_key) as bookmaker_count,
+                AVG(CASE WHEN outcome_name = 'Over' THEN outcome_price END) as avg_over_price,
+                AVG(CASE WHEN outcome_name = 'Under' THEN outcome_price END) as avg_under_price
+            FROM player_props
+            WHERE player_name = ? AND prop_type = ?
+            GROUP BY event_id, home_team, away_team, commence_time, prop_type, outcome_point
+            ORDER BY commence_time DESC
+            LIMIT 15
+        """, (player_name, prop_type))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        history = [{
+            'event_id': row['event_id'],
+            'matchup': f"{row['away_team']} @ {row['home_team']}",
+            'commence_time': row['commence_time'],
+            'prop_type': row['prop_type'],
+            'line_value': row['line_value'],
+            'bookmaker_count': row['bookmaker_count'],
+            'avg_over_price': row['avg_over_price'],
+            'avg_under_price': row['avg_under_price']
+        } for row in rows]
+        
+        return jsonify({
+            'player_name': player_name,
+            'prop_type': prop_type,
+            'history': history,
+            'count': len(history),
+            'success': True
+        })
+    except Exception as e:
+        logger.error(f"Error fetching player history by prop: {e}")
         return jsonify({'error': str(e), 'success': False}), 500
 
 

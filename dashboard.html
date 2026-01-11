@@ -8,6 +8,9 @@
 <!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -135,6 +138,213 @@ button:active {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   box-shadow: 0 6px 16px rgba(99,102,241,0.4);
 }
+
+/* =========================
+   MODAL
+========================= */
+.games-list-view {
+  display: block;
+}
+
+.games-list-view:not(.active) {
+  display: none;
+}
+
+.game-details-view {
+  display: none;
+}
+
+.game-details-view.active {
+  display: block;
+}
+
+.game-details-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: #0b0f19;
+  z-index: 10;
+  margin: 0 -1.5rem 2rem -1.5rem;
+}
+
+.back-button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #e5e7eb;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.prop-type-label {
+  text-transform: capitalize;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #6366f1;
+}
+
+.player-name {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+/* =========================
+   PROP TABLE STYLING
+========================= */
+.props-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.props-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+}
+
+.props-table td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.props-table tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.props-table tr:last-child td {
+  border-bottom: none;
+}
+
+.prop-line-cell {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.prop-outcome-cell {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.over-option, .under-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.over-option .label {
+  color: #10b981;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.under-option .label {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.bookmaker-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bookmaker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.bookmaker-name {
+  opacity: 0.8;
+  font-size: 0.75rem;
+}
+
+.bookmaker-odds {
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.no-data {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* =========================
+   HISTORY CHART
+========================= */
+.history-toggle {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #9ca3af;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+
+.history-toggle:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  color: #e5e7eb;
+}
+
+.history-chart-container {
+  display: none;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.02);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: 0.5rem;
+}
+
+.history-chart-container.active {
+  display: block;
+}
+
+.history-chart-wrapper {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.history-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+}
 </style>
 </head>
 
@@ -153,8 +363,8 @@ button:active {
     </div>
 
     <div class="flex items-center gap-4">
-      <input class="search-glow bg-white/10 px-4 py-2 rounded-xl w-64 text-sm" placeholder="Search players, teams">
-      <button class="btn-gradient px-5 py-2 rounded-xl font-semibold">
+      <input id="searchInput" class="search-glow bg-white/10 px-4 py-2 rounded-xl w-64 text-sm" placeholder="Search players, teams">
+      <button id="refreshBtn" class="btn-gradient px-5 py-2 rounded-xl font-semibold cursor-pointer">
         <i class="fas fa-sync-alt mr-2"></i>Refresh
       </button>
     </div>
@@ -165,42 +375,648 @@ button:active {
 
 <section class="glass rounded-2xl p-6 flex justify-between items-center">
   <div class="flex gap-2">
-    <button class="sport-pill active px-4 py-2 rounded-full text-sm font-semibold">NBA</button>
-    <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">NFL</button>
-    <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">MLB</button>
-    <button class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold">NHL</button>
+    <button data-sport="basketball_nba" class="sport-pill active px-4 py-2 rounded-full text-sm font-semibold cursor-pointer">NBA</button>
+    <button data-sport="americanfootball_nfl" class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold cursor-pointer">NFL</button>
+    <button data-sport="baseball_mlb" class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold cursor-pointer">MLB</button>
+    <button data-sport="icehockey_nhl" class="sport-pill glass px-4 py-2 rounded-full text-sm font-semibold cursor-pointer">NHL</button>
   </div>
 
   <div class="flex gap-2">
-    <button class="glass px-4 py-2 rounded-full text-sm">Today</button>
-    <button class="glass px-4 py-2 rounded-full text-sm">Tomorrow</button>
-    <button class="btn-gradient px-4 py-2 rounded-full text-sm">Week</button>
+    <button data-date="today" class="glass px-4 py-2 rounded-full text-sm cursor-pointer">Today</button>
+    <button data-date="tomorrow" class="glass px-4 py-2 rounded-full text-sm cursor-pointer">Tomorrow</button>
+    <button data-date="week" class="btn-gradient px-4 py-2 rounded-full text-sm cursor-pointer">Week</button>
   </div>
 </section>
 
-<section class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-  <div class="glass card-modern rounded-2xl p-6">
-    <span class="label">Matchup</span>
-    <h2 class="text-xl font-bold mt-1">Lakers @ Warriors</h2>
-
-    <div class="mt-4 flex justify-between text-sm">
-      <div>
-        <span class="label">Players</span>
-        <p class="numeric font-semibold">28</p>
-      </div>
-      <div>
-        <span class="label">Books</span>
-        <p class="numeric font-semibold">9</p>
-      </div>
-      <div>
-        <span class="label">Time</span>
-        <p class="numeric font-semibold">7:30 PM</p>
-      </div>
+<section id="gamesListView" class="games-list-view active">
+  <div id="gamesContainer" class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="glass rounded-2xl p-8 text-center col-span-full">
+      <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+      <p class="text-lg">Loading games...</p>
     </div>
   </div>
 </section>
 
+<!-- Game Details Full Screen View -->
+<section id="gameDetailsView" class="game-details-view">
+  <div class="glass rounded-2xl p-6">
+    <div class="game-details-header">
+      <div class="flex items-center gap-4">
+        <button id="backButton" class="back-button">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back to Games</span>
+        </button>
+        <div>
+          <h2 id="gameDetailsTitle" class="text-2xl font-bold">Game Details</h2>
+          <p id="gameDetailsSubtitle" class="text-sm opacity-75 mt-1"></p>
+        </div>
+      </div>
+    </div>
+    
+    <div id="gameDetailsLoading" class="text-center py-12">
+      <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+      <p>Loading game details...</p>
+    </div>
+    <div id="gameDetailsContent" style="display: none;"></div>
+  </div>
+</section>
+
 </main>
+
+<script>
+// State management
+let currentSport = 'basketball_nba';
+let currentDate = 'week';
+let games = [];
+
+// DOM Elements
+const sportButtons = document.querySelectorAll('[data-sport]');
+const dateButtons = document.querySelectorAll('[data-date]');
+const refreshBtn = document.getElementById('refreshBtn');
+const searchInput = document.getElementById('searchInput');
+const gamesContainer = document.getElementById('gamesContainer');
+const gamesListView = document.getElementById('gamesListView');
+const gameDetailsView = document.getElementById('gameDetailsView');
+const backButton = document.getElementById('backButton');
+const gameDetailsTitle = document.getElementById('gameDetailsTitle');
+const gameDetailsSubtitle = document.getElementById('gameDetailsSubtitle');
+const gameDetailsLoading = document.getElementById('gameDetailsLoading');
+const gameDetailsContent = document.getElementById('gameDetailsContent');
+
+// Sport mapping
+const sportMap = {
+  'basketball_nba': 'NBA',
+  'americanfootball_nfl': 'NFL',
+  'baseball_mlb': 'MLB',
+  'icehockey_nhl': 'NHL'
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  setupEventListeners();
+  loadGames();
+  
+  // Back button handler
+  backButton.addEventListener('click', showGamesList);
+  
+  // Keyboard handler - ESC to go back
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && gameDetailsView.classList.contains('active')) {
+      showGamesList();
+    }
+  });
+});
+
+// Event Listeners
+function setupEventListeners() {
+  // Sport filter buttons
+  sportButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sport = btn.dataset.sport;
+      setActiveSport(sport);
+      currentSport = sport;
+      loadGames();
+    });
+  });
+
+  // Date filter buttons
+  dateButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const date = btn.dataset.date;
+      setActiveDate(date);
+      currentDate = date;
+      loadGames();
+    });
+  });
+
+  // Refresh button
+  refreshBtn.addEventListener('click', () => {
+    refreshBtn.querySelector('i').classList.add('fa-spin');
+    loadGames().finally(() => {
+      refreshBtn.querySelector('i').classList.remove('fa-spin');
+    });
+  });
+
+  // Search input (debounced)
+  let searchTimeout;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const query = e.target.value.toLowerCase();
+      filterGames(query);
+    }, 300);
+  });
+}
+
+// Set active sport button
+function setActiveSport(sport) {
+  sportButtons.forEach(btn => {
+    if (btn.dataset.sport === sport) {
+      btn.classList.add('active');
+      btn.classList.remove('glass');
+    } else {
+      btn.classList.remove('active');
+      btn.classList.add('glass');
+    }
+  });
+}
+
+// Set active date button
+function setActiveDate(date) {
+  dateButtons.forEach(btn => {
+    if (btn.dataset.date === date) {
+      btn.classList.add('btn-gradient');
+      btn.classList.remove('glass');
+    } else {
+      btn.classList.remove('btn-gradient');
+      btn.classList.add('glass');
+    }
+  });
+}
+
+// Load games from API
+async function loadGames() {
+  try {
+    gamesContainer.innerHTML = `
+      <div class="glass rounded-2xl p-8 text-center col-span-full">
+        <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+        <p class="text-lg">Loading games...</p>
+      </div>
+    `;
+
+    const response = await fetch(`/api/games?sport=${currentSport}&date=${currentDate}`);
+    const data = await response.json();
+
+    if (data.success && data.games) {
+      games = data.games;
+      renderGames(games);
+    } else {
+      showError(data.error || 'Failed to load games');
+    }
+  } catch (error) {
+    console.error('Error loading games:', error);
+    showError('Error loading games. Make sure the server is running.');
+  }
+}
+
+// Render games
+function renderGames(gamesToRender) {
+  if (gamesToRender.length === 0) {
+    gamesContainer.innerHTML = `
+      <div class="glass rounded-2xl p-8 text-center col-span-full">
+        <i class="fas fa-inbox text-4xl mb-4 opacity-50"></i>
+        <p class="text-lg opacity-75">No games found</p>
+        <p class="text-sm opacity-50 mt-2">Try selecting a different sport or date range</p>
+      </div>
+    `;
+    return;
+  }
+
+  gamesContainer.innerHTML = gamesToRender.map(game => `
+    <div class="glass card-modern rounded-2xl p-6 cursor-pointer" onclick="showGameDetails('${game.event_id}')">
+      <span class="label">Matchup</span>
+      <h2 class="text-xl font-bold mt-1">${escapeHtml(game.away_team)} @ ${escapeHtml(game.home_team)}</h2>
+      
+      <div class="mt-4 flex justify-between text-sm">
+        <div>
+          <span class="label">Players</span>
+          <p class="numeric font-semibold">${game.player_count || 0}</p>
+        </div>
+        <div>
+          <span class="label">Books</span>
+          <p class="numeric font-semibold">${game.bookmaker_count || 0}</p>
+        </div>
+        <div>
+          <span class="label">Time</span>
+          <p class="numeric font-semibold">${game.commence_time_formatted || 'TBD'}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Filter games by search query
+function filterGames(query) {
+  if (!query.trim()) {
+    renderGames(games);
+    return;
+  }
+
+  const filtered = games.filter(game => {
+    const searchText = `${game.home_team} ${game.away_team}`.toLowerCase();
+    return searchText.includes(query);
+  });
+
+  renderGames(filtered);
+}
+
+// Show game details full screen
+async function showGameDetails(eventId) {
+  // Switch to game details view
+  gamesListView.classList.remove('active');
+  gameDetailsView.classList.add('active');
+  
+  gameDetailsLoading.style.display = 'block';
+  gameDetailsContent.style.display = 'none';
+  
+  try {
+    const response = await fetch(`/api/game/${eventId}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      displayGameDetails(data);
+    } else {
+      gameDetailsLoading.innerHTML = `
+        <i class="fas fa-exclamation-triangle text-3xl mb-4 text-red-400"></i>
+        <p class="text-red-400">Error loading game details</p>
+        <p class="text-sm opacity-75 mt-2">${escapeHtml(data.error || 'Unknown error')}</p>
+      `;
+    }
+  } catch (error) {
+    console.error('Error loading game details:', error);
+    gameDetailsLoading.innerHTML = `
+      <i class="fas fa-exclamation-triangle text-3xl mb-4 text-red-400"></i>
+      <p class="text-red-400">Error loading game details</p>
+      <p class="text-sm opacity-75 mt-2">${escapeHtml(error.message)}</p>
+    `;
+  }
+}
+
+// Display game details
+function displayGameDetails(data) {
+  const game = data.game;
+  const players = data.players || [];
+  
+  // Set title
+  gameDetailsTitle.textContent = `${game.away_team} @ ${game.home_team}`;
+  gameDetailsSubtitle.textContent = `${players.length} players • ${data.total_props} props`;
+  
+  // Hide loading, show content
+  gameDetailsLoading.style.display = 'none';
+  gameDetailsContent.style.display = 'block';
+  
+  // Render players and props
+  if (players.length === 0) {
+    gameDetailsContent.innerHTML = `
+      <div class="text-center py-12">
+        <i class="fas fa-inbox text-4xl mb-4 opacity-50"></i>
+        <p class="text-lg opacity-75">No player props available</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Organize by prop type across all players
+  const allPropTypes = [...new Set(players.flatMap(p => p.props.map(prop => prop.prop_type)))];
+  
+  gameDetailsContent.innerHTML = `
+    <div class="space-y-8">
+      ${allPropTypes.map(propType => renderPropTypeSection(propType, players)).join('')}
+    </div>
+  `;
+}
+
+// Render a section for a specific prop type (e.g., "Player Points")
+function renderPropTypeSection(propType, players) {
+  const propTypeLabel = propType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  
+  // Filter players who have this prop type
+  const playersWithProp = players.filter(player => 
+    player.props.some(prop => prop.prop_type === propType)
+  );
+  
+  if (playersWithProp.length === 0) return '';
+  
+  const rows = playersWithProp.map(player => {
+    // Get all props for this player and prop type
+    const playerProps = player.props.filter(prop => prop.prop_type === propType);
+    
+    // Group by line value
+    const linesByValue = {};
+    playerProps.forEach(prop => {
+      const lineValue = prop.outcome_point;
+      if (!linesByValue[lineValue]) {
+        linesByValue[lineValue] = { over: [], under: [] };
+      }
+      if (prop.outcome_name === 'Over') {
+        linesByValue[lineValue].over.push(prop);
+      } else if (prop.outcome_name === 'Under') {
+        linesByValue[lineValue].under.push(prop);
+      }
+    });
+    
+    // Get the most common line (or first one if only one)
+    const lineValues = Object.keys(linesByValue);
+    if (lineValues.length === 0) return null;
+    
+    // Use the first line value (most common typically comes first)
+    const primaryLine = lineValues[0];
+    const { over, under } = linesByValue[primaryLine];
+    
+    // Build bookmaker badges for Over (deduplicate by bookmaker name)
+    const overBookmakersMap = new Map();
+    over.forEach(p => {
+      const bookmakerName = p.bookmaker_title || 'Unknown';
+      if (!overBookmakersMap.has(bookmakerName)) {
+        overBookmakersMap.set(bookmakerName, {
+          name: bookmakerName,
+          odds: p.outcome_price ? p.outcome_price.toFixed(2) : 'N/A'
+        });
+      }
+    });
+    const overBookmakers = Array.from(overBookmakersMap.values());
+    
+    // Build bookmaker badges for Under (deduplicate by bookmaker name)
+    const underBookmakersMap = new Map();
+    under.forEach(p => {
+      const bookmakerName = p.bookmaker_title || 'Unknown';
+      if (!underBookmakersMap.has(bookmakerName)) {
+        underBookmakersMap.set(bookmakerName, {
+          name: bookmakerName,
+          odds: p.outcome_price ? p.outcome_price.toFixed(2) : 'N/A'
+        });
+      }
+    });
+    const underBookmakers = Array.from(underBookmakersMap.values());
+    
+    return {
+      playerName: player.name,
+      line: primaryLine,
+      overBookmakers,
+      underBookmakers
+    };
+  }).filter(row => row !== null);
+  
+  if (rows.length === 0) return '';
+  
+  const tableRows = rows.map((row, index) => {
+    const chartId = `chart-${propType.replace(/[^a-zA-Z0-9]/g, '_')}-${index}-${Date.now()}`;
+    const containerId = `chart-container-${propType.replace(/[^a-zA-Z0-9]/g, '_')}-${index}`;
+    const toggleId = `toggle-${propType.replace(/[^a-zA-Z0-9]/g, '_')}-${index}`;
+    const safePlayerName = row.playerName.replace(/'/g, "\\'");
+    
+    return `
+    <tr>
+      <td class="prop-line-cell">
+        <div>${escapeHtml(row.playerName)}</div>
+        <button class="history-toggle" id="${toggleId}" onclick="toggleHistory('${safePlayerName.replace(/'/g, "\\'")}', '${propType}', '${chartId}', '${containerId}', '${toggleId}', ${row.line})">
+          <i class="fas fa-chart-bar"></i>
+          <span>View History</span>
+        </button>
+      </td>
+      <td class="numeric font-semibold">${row.line}</td>
+      <td class="prop-outcome-cell">
+        <div class="over-option">
+          <div class="label">Over</div>
+          <div class="bookmaker-list">
+            ${row.overBookmakers.length > 0 
+              ? row.overBookmakers.map(b => `
+                  <div class="bookmaker-badge">
+                    <span class="bookmaker-name">${escapeHtml(b.name)}</span>
+                    <span class="bookmaker-odds">${b.odds}</span>
+                  </div>
+                `).join('')
+              : '<span class="no-data">No data</span>'
+            }
+          </div>
+        </div>
+        <div class="under-option">
+          <div class="label">Under</div>
+          <div class="bookmaker-list">
+            ${row.underBookmakers.length > 0
+              ? row.underBookmakers.map(b => `
+                  <div class="bookmaker-badge">
+                    <span class="bookmaker-name">${escapeHtml(b.name)}</span>
+                    <span class="bookmaker-odds">${b.odds}</span>
+                  </div>
+                `).join('')
+              : '<span class="no-data">No data</span>'
+            }
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr id="${containerId}" class="history-chart-container">
+      <td colspan="3">
+        <div class="history-chart-wrapper">
+          <canvas id="${chartId}"></canvas>
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join('');
+  
+  return `
+    <div class="glass rounded-2xl p-6">
+      <div class="prop-type-label mb-4 text-lg">${escapeHtml(propTypeLabel)}</div>
+      <div class="overflow-x-auto">
+        <table class="props-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th class="text-center" style="width: 100px;">Line</th>
+              <th>Over / Under</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// Show games list view
+function showGamesList() {
+  gameDetailsView.classList.remove('active');
+  gamesListView.classList.add('active');
+}
+
+// Toggle history chart
+async function toggleHistory(playerName, propType, chartId, containerId, toggleId, currentLine) {
+  const container = document.getElementById(containerId);
+  const toggle = document.getElementById(toggleId);
+  const isActive = container.classList.contains('active');
+  
+  if (isActive) {
+    // Close
+    container.classList.remove('active');
+    toggle.querySelector('span').textContent = 'View History';
+    toggle.querySelector('i').classList.remove('fa-chevron-up');
+    toggle.querySelector('i').classList.add('fa-chart-bar');
+    
+    // Destroy chart if exists
+    if (window.chartInstances && window.chartInstances[chartId]) {
+      window.chartInstances[chartId].destroy();
+      delete window.chartInstances[chartId];
+    }
+  } else {
+    // Open
+    container.classList.add('active');
+    toggle.querySelector('span').textContent = 'Hide History';
+    toggle.querySelector('i').classList.remove('fa-chart-bar');
+    toggle.querySelector('i').classList.add('fa-chevron-up');
+    
+    // Load and render chart
+    await loadHistoryChart(playerName, propType, chartId, currentLine);
+  }
+}
+
+// Load and render history chart
+async function loadHistoryChart(playerName, propType, chartId, currentLine) {
+  const canvas = document.getElementById(chartId);
+  if (!canvas) return;
+  
+  const container = canvas.parentElement;
+  
+  // Show loading
+  container.innerHTML = '<div class="history-loading"><i class="fas fa-spinner fa-spin"></i> Loading history...</div>';
+  
+  try {
+    const encodedPlayerName = encodeURIComponent(playerName);
+    const encodedPropType = encodeURIComponent(propType);
+    const response = await fetch(`/api/player/${encodedPlayerName}/history/${encodedPropType}`);
+    const data = await response.json();
+    
+    if (!data.success || !data.history || data.history.length === 0) {
+      container.innerHTML = '<div class="history-loading">No historical data available</div>';
+      return;
+    }
+    
+    // Restore canvas
+    container.innerHTML = `<canvas id="${chartId}"></canvas>`;
+    const newCanvas = document.getElementById(chartId);
+    const newCtx = newCanvas.getContext('2d');
+    
+    // Prepare data (reverse to show oldest first)
+    const history = data.history.reverse().slice(0, 15);
+    const labels = history.map(h => {
+      const date = new Date(h.commence_time);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    
+    // For now, use line values as bars (you can replace with actual stat values when available)
+    const lineValues = history.map(h => parseFloat(h.line_value) || 0);
+    
+    // Create colors: green if above current line, red if below
+    const backgroundColors = lineValues.map(val => val >= currentLine ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)');
+    const borderColors = lineValues.map(val => val >= currentLine ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)');
+    
+    // Initialize chart instances object if not exists
+    if (!window.chartInstances) {
+      window.chartInstances = {};
+    }
+    
+    // Destroy existing chart if any
+    if (window.chartInstances[chartId]) {
+      window.chartInstances[chartId].destroy();
+    }
+    
+    // Create new chart
+    window.chartInstances[chartId] = new Chart(newCtx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Line Value',
+          data: lineValues,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Line: ${context.parsed.y}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              color: '#9ca3af',
+              font: {
+                family: 'JetBrains Mono, monospace'
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#9ca3af'
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        }
+      },
+      plugins: [{
+        id: 'dashedLine',
+        afterDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          const yScale = chart.scales.y;
+          const yPos = yScale.getPixelForValue(currentLine);
+          
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, yPos);
+          ctx.lineTo(chartArea.right, yPos);
+          ctx.stroke();
+          
+          // Add label
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+          ctx.fillRect(chartArea.right - 100, yPos - 10, 95, 20);
+          ctx.fillStyle = '#fff';
+          ctx.font = '11px Satoshi, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(`Line: ${currentLine}`, chartArea.right - 5, yPos + 4);
+          ctx.restore();
+        }
+      }]
+    });
+    
+  } catch (error) {
+    console.error('Error loading history:', error);
+    container.innerHTML = '<div class="history-loading text-red-400">Error loading history</div>';
+  }
+}
+
+// Show error message
+function showError(message) {
+  gamesContainer.innerHTML = `
+    <div class="glass rounded-2xl p-8 text-center col-span-full border border-red-500/30">
+      <i class="fas fa-exclamation-triangle text-3xl mb-4 text-red-400"></i>
+      <p class="text-lg text-red-400">Error</p>
+      <p class="text-sm opacity-75 mt-2">${escapeHtml(message)}</p>
+    </div>
+  `;
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
 
 </body>
 </html>
