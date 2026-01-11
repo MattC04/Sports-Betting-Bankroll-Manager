@@ -889,17 +889,27 @@ async function loadHistoryChart(playerName, propType, chartId, currentLine) {
     const newCanvas = document.getElementById(chartId);
     const newCtx = newCanvas.getContext('2d');
     
-    // Prepare data (reverse to show oldest first)
+    // Prepare data - show most recent 10-15 games (already sorted DESC from API, so reverse to show oldest first)
     const history = data.history.reverse().slice(0, 15);
+    
+    // Show dates with full format (including year if needed)
+    const today = new Date();
     const labels = history.map(h => {
       const date = new Date(h.commence_time);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const isThisYear = date.getFullYear() === today.getFullYear();
+      if (isThisYear) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+      }
     });
     
-    // For now, use line values as bars (you can replace with actual stat values when available)
+    // Note: We're showing historical LINE VALUES, not actual game stats
+    // To show if player hit over/under, we'd need actual game performance data
     const lineValues = history.map(h => parseFloat(h.line_value) || 0);
     
-    // Create colors: green if above current line, red if below
+    // Create colors: green if historical line >= current line, red if below
+    // This shows how the line has moved over time relative to current line
     const backgroundColors = lineValues.map(val => val >= currentLine ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)');
     const borderColors = lineValues.map(val => val >= currentLine ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)');
     
@@ -936,8 +946,30 @@ async function loadHistoryChart(playerName, propType, chartId, currentLine) {
           tooltip: {
             callbacks: {
               label: function(context) {
-                return `Line: ${context.parsed.y}`;
+                return `Historical Line: ${context.parsed.y}`;
+              },
+              afterLabel: function(context) {
+                const value = context.parsed.y;
+                const result = value >= currentLine ? '≥ Current Line' : '< Current Line';
+                return result;
               }
+            }
+          },
+          title: {
+            display: true,
+            text: `Last ${history.length} Games - Current Line: ${currentLine}`,
+            color: '#e5e7eb',
+            font: {
+              size: 14,
+              weight: 'bold'
+            }
+          },
+          subtitle: {
+            display: true,
+            text: 'Note: Shows historical prop lines, not actual game performance',
+            color: '#9ca3af',
+            font: {
+              size: 11
             }
           }
         },
